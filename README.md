@@ -6,7 +6,9 @@ Install the latest version from source:
 pip install git+https://github.com/batchfy/vlkit.git@main
 ```
 
-or install from pypi:
+or install from source:
 ```
-pip install vlkit
+git clone https://github.com/batchfy/vlkit.git
+cd vlkit
+pip install -e ./
 ```
