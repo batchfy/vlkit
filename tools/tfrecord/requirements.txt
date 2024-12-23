@@ -1,0 +1,5 @@
+tensorflow-cpu
+vlkit
+pillow
+torch
+protobuf
