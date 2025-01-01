@@ -1,8 +1,35 @@
 import numpy as np
-try:
-    import torch
-except:
-    torch = None
+from ..array import isarray
+from PIL import Image
+
+
+def crop_image(x, top: int, left: int, target_h: int, target_w: int, is_hw_first: bool = True):
+    """
+    Crop an image or an array to the specified dimensions.
+
+    Parameters:
+    x (PIL.Image.Image or numpy.ndarray): The input image or array to be cropped.
+    top (int): The top pixel coordinate for the crop.
+    left (int): The left pixel coordinate for the crop.
+    target_h (int): The height of the cropped area.
+    target_w (int): The width of the cropped area.
+    is_hw_first (bool, optional): If True, the array is assumed to have the shape (height, width, ...).
+                                    If False, the array is assumed to have the shape (..., height, width).
+                                    Default is True.
+
+    Returns:
+    PIL.Image.Image or numpy.ndarray: The cropped image or array.
+    """
+    if isinstance(x, Image.Image):
+        cropped = x.crop((left, top, left + target_w, top + target_h))
+    elif isarray(x):
+        if is_hw_first:
+            cropped = x[top:top + target_h, left:left + target_w, ...]
+        else:
+            cropped = x[..., top:top + target_h, left:left + target_w]
+    return cropped
+
+
 
 def random_crop(x, size: tuple, is_hw_first=True):
     """
@@ -10,8 +37,7 @@ def random_crop(x, size: tuple, is_hw_first=True):
     
     Parameters:
     ----------
-    x : np.ndarray or torch.Tensor
-        Input tensor of shape [h, w, ...] or [..., h, w].
+    x : np.ndarray or torch.Tensor or PIL.Image or list of them.
     size : tuple
         Target crop size as (h, w).
     is_hw_first : bool
@@ -23,11 +49,27 @@ def random_crop(x, size: tuple, is_hw_first=True):
     np.ndarray or torch.Tensor
         Cropped tensor with the same type as input.
     """
-    if not isinstance(x, (np.ndarray, torch.Tensor)):
-        raise ValueError("Input x must be a numpy.ndarray or torch.Tensor.")
-    
-    input_h, input_w = (x.shape[:2] if is_hw_first else x.shape[-2:])
+    assert isarray(x) or isinstance(x, (Image.Image, list))
+
     target_h, target_w = size
+    if isinstance(x, Image.Image):
+        input_w, input_h = x.size
+    elif isarray(x):
+        input_h, input_w = (x.shape[:2] if is_hw_first else x.shape[-2:])
+    elif isinstance(x, list):
+        assert len(x) > 0
+        if isarray(x[0]):
+            input_h, input_w = (x[0].shape[:2] if is_hw_first else x[0].shape[-2:])
+            for x1 in x:
+                assert (input_h, input_w) == x1.shape[:2]
+        elif isinstance(x[0], Image.Image):
+            input_w, input_h = x[0].size
+            for x1 in x:
+                assert (input_w, input_h) == x1.size, "All images must have the same size."
+        else:
+            raise TypeError("Input list must contain NumPy arrays or PIL.Images.")
+    else:
+        raise TypeError("Input must be a NumPy array, PyTorch tensor, an PIL.Image, or list of them.")
 
     if target_h > input_h or target_w > input_w:
         raise ValueError("Target size cannot be larger than the input size.")
@@ -35,13 +77,13 @@ def random_crop(x, size: tuple, is_hw_first=True):
     # Generate random starting points for cropping
     top = np.random.randint(0, input_h - target_h + 1)
     left = np.random.randint(0, input_w - target_w + 1)
-    
-    if is_hw_first:
-        cropped = x[top:top + target_h, left:left + target_w, ...]
+
+    if isinstance(x, list):
+        cropped = [crop_image(x1, top, left, target_h, target_w, is_hw_first) for x1 in x]
     else:
-        cropped = x[..., top:top + target_h, left:left + target_w]
-    
+        cropped = crop_image(x, top, left, target_h, target_w, is_hw_first)
     return cropped
+
 
 def crop_long_edge(img, mode:str='center'):
     assert mode in ['center', 'random'], \
