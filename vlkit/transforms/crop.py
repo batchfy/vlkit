@@ -1,10 +1,14 @@
 import numpy as np
 from ..array import isarray
-from PIL import Image
+from PIL import Image, ImageOps
 from typing import Union
 
 
-def get_input_shape(x: Union[np.ndarray, Image.Image, list], is_hw_first: bool = True):
+ImgOrList = Union[np.ndarray, Image.Image, list]
+ArrayOrImage = Union[np.ndarray, Image.Image]
+
+
+def get_input_hw(x: ImgOrList, is_hw_first: bool = True):
     """
     Get the input image shape.
 
@@ -43,10 +47,10 @@ def get_input_shape(x: Union[np.ndarray, Image.Image, list], is_hw_first: bool =
 
 
 def crop_image(
-    x: Union[np.ndarray, Image.Image],
+    x: ArrayOrImage,
     top: int, left: int, target_h: int, target_w: int, 
     is_hw_first: bool = True
-    ) -> Union[np.ndarray, Image.Image]:
+    ) -> ArrayOrImage:
     """
     Crop an image or an array to the specified dimensions.
 
@@ -70,10 +74,13 @@ def crop_image(
             cropped = x[top:top + target_h, left:left + target_w, ...]
         else:
             cropped = x[..., top:top + target_h, left:left + target_w]
+    else:
+        raise TypeError("Input must be a NumPy array or a PIL.Image.")
     return cropped
 
 
-def random_crop(x: Union[np.ndarray, Image.Image, list], size: tuple, is_hw_first=True):
+
+def random_crop(x: ImgOrList, size: tuple, is_hw_first=True):
     """
     Perform a random crop on the input tensor.
     
@@ -94,7 +101,7 @@ def random_crop(x: Union[np.ndarray, Image.Image, list], size: tuple, is_hw_firs
     assert isarray(x) or isinstance(x, (Image.Image, list))
 
     target_h, target_w = size
-    input_h, input_w = get_input_shape(x, is_hw_first)
+    input_h, input_w = get_input_hw(x, is_hw_first)
 
     if target_h > input_h or target_w > input_w:
         raise ValueError("Target size cannot be larger than the input size.")
@@ -111,14 +118,14 @@ def random_crop(x: Union[np.ndarray, Image.Image, list], size: tuple, is_hw_firs
 
 
 def crop_long_edge(
-        x: Union[np.ndarray, Image.Image, list],
+        x: ImgOrList,
         mode:str='center',
         is_hw_first:bool=True
-) -> Union[np.ndarray, Image.Image]:
+) -> ImgOrList:
     assert mode in ['center', 'random'], \
             f"mode must be either 'random' or 'center'."
     assert isarray(x) or isinstance(x, (Image.Image, list))
-    input_h, input_w = get_input_shape(x, is_hw_first)
+    input_h, input_w = get_input_hw(x, is_hw_first)
     crop_size = min(input_h, input_w)
     if mode == 'random':
         top = 0 if input_h == crop_size else \
@@ -137,26 +144,12 @@ def crop_long_edge(
     return cropped
 
 
-def center_crop(image: np.ndarray, target_size, is_hw_first:bool) -> np.ndarray:
-    """
-    Center crop an input image to the target size.
-    If the target dimensions are larger than or equal to the input, the image is returned unchanged.
-
-    Args:
-        image (np.ndarray): Input image as a NumPy array (H x W x C or H x W).
-        target_size (int or tuple): Target size as a single number (for square crop) or a tuple (target_h, target_w).
-        is_hw_first (boolean): Are height and width the first two dimensions of the input.
-
-    Returns:
-        np.ndarray: Center-cropped image.
-    """
+def center_crop(x: ImgOrList, target_size: tuple | int, is_hw_first:bool) -> ImgOrList:
     # Get input image dimensions
-    if is_hw_first:
-        input_h, input_w = image.shape[:2]
-    else:
-        input_h, input_w = image.shape[-2:]
+    input_h, input_w = get_input_hw(x, is_hw_first)
 
     # Handle target_size input
+    assert isinstance(target_size) or len(target_size) == 2, f"Invalid target_size: {target_size}."
     if isinstance(target_size, int):
         target_h = target_w = target_size
     else:
@@ -164,7 +157,7 @@ def center_crop(image: np.ndarray, target_size, is_hw_first:bool) -> np.ndarray:
 
     # Check if cropping is necessary
     if target_h >= input_h and target_w >= input_w:
-        return image
+        return x
 
     # Compute cropping boundaries
     start_h = max((input_h - target_h) // 2, 0)
@@ -174,9 +167,42 @@ def center_crop(image: np.ndarray, target_size, is_hw_first:bool) -> np.ndarray:
     end_w = start_w + target_w
 
     # Crop the image
-    if is_hw_first:
-        cropped_image = image[start_h:end_h, start_w:end_w, ]
+    if isinstance(x, list):
+        cropped = [crop_image(x1, start_h, start_w, target_h, target_w, is_hw_first) for x1 in x]
     else:
-        cropped_image = image[..., start_h:end_h, start_w:end_w]
+        cropped = crop_image(x, start_h, start_w, target_h, target_w, is_hw_first)
+    return cropped
 
-    return cropped_image
+
+def crop_to_divisible(
+    x: ImgOrList,
+    divisor: int, is_hw_first: bool = True
+) -> ImgOrList:
+    """
+    Crop an input image to make its height and width divisible by a given number.
+
+    Parameters:
+    x (np.ndarray): Input image of shape [h, w, c] or [c, h, w] if is_hw_first is False, 
+                    otherwise [c, h, w] or [h, w].
+    divisor (int): The number by which the height and width should be divisible.
+    is_hw_first (bool, optional): If True, the array is assumed to have the shape (height, width, ...).
+                                  If False, the array is assumed to have the shape (..., height, width).
+                                  Default is True.
+
+    Returns:
+    np.ndarray: The cropped image.
+    """
+    h, w = get_input_hw(x, is_hw_first)
+
+    new_h = int(np.floor(h / divisor) * divisor)
+    new_w = int(np.floor(w / divisor) * divisor)
+
+    if new_h == h and new_w == w:
+        return x
+    if isinstance(x, list):
+        divisible = [crop_to_divisible(x1, divisor, is_hw_first) for x1 in x]
+    else:
+        start_h = (h - new_h) // 2
+        start_w = (w - new_w) // 2
+        divisible = crop_image(x, start_h, start_w, new_h, new_w, is_hw_first)
+    return divisible

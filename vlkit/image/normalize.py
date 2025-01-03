@@ -65,7 +65,7 @@ def normalize(x, lower_bound=0, upper_bound=255, eps=1e-6):
         backend = 'torch'
     else:
         raise RuntimeError(f"Input should be either a numpy.array" \
-                "or torch.Tensor, but got {type(x)}")
+                f"or torch.Tensor, but got {type(x)}")
 
     orig_shape = x.shape
     x = x.double() if backend == 'torch' else x.astype(np.float64)
