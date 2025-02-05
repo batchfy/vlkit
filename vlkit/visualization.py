@@ -2,6 +2,10 @@ import hashlib, cv2
 import numpy as np
 from .image import normalize
 
+def iscolor(x):
+    if isinstance(x, (list, tuple, np.ndarray)) and len(x) == 3:
+        return all(0 <= v <= 255 for v in x)
+    return False
 
 def str2color(s: str) -> tuple:
     """
@@ -23,7 +27,7 @@ def str2color(s: str) -> tuple:
     return (r, g, b)
 
 
-def overlay(image, mask, alpha=0.3, palette=None, show_boundary=False):
+def overlay(image, mask, alpha=0.3, palette=None, show_boundary=False, boundary_color=(255, 255, 255)):
     """
     Overlay a mask on an image with optional boundary highlighting.
 
@@ -39,22 +43,32 @@ def overlay(image, mask, alpha=0.3, palette=None, show_boundary=False):
     """
     h, w = image.shape[:2]
     assert mask.shape == (h, w), f"Bad mask shape: {mask.shape}."
+
+    mask = mask.astype(np.uint8)
     if image.ndim == 2 or image.shape[-1] == 1:
         image = np.stack([image] * 3, axis=-1)
     assert image.shape[2] == 3, f"Bad image shape: {image.shape}."
+
     image = normalize(image, 0, 255).astype(np.uint8)
     overlay = image.copy()
+
     categories = np.unique(mask)
-    palette = dict()
+
+    if palette is None:
+        palette = dict()
     for cat in categories:
         if cat != 0:
-            palette[cat] = str2color(str(cat))
+            if cat not in palette:
+                palette[cat] = str2color(str(cat))
+            assert iscolor(palette[cat]), f"Bad color for category {cat}: {palette[cat]}."
+
     for cat in palette:
         color = np.ones((h, w, 3)) * np.array(palette[cat])
         overlay1 = color * (mask == cat)[:, :, None] * alpha + image * (1 - alpha)
         overlay[mask == cat] = overlay1[mask == cat]
         if show_boundary:
+            assert len(boundary_color) == 3, f"Bad boundary color: {boundary_color}."
             contours, _ = cv2.findContours((mask == cat).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(overlay, contours, -1, (255, 255, 255), 1)
+            cv2.drawContours(overlay, contours, -1, boundary_color, 1)
     return normalize(overlay, 0, 255).astype(np.uint8)
 
