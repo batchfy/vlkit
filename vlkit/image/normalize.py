@@ -88,3 +88,7 @@ def normalize(x, lower_bound=0, upper_bound=255, eps=1e-6):
     x *= scale
     x += lower_bound
     return x.reshape(*orig_shape)
+
+
+def normalize_uint8(x):
+    return np.uint8(normalize(x, 0, 255))

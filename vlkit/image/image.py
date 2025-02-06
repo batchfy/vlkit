@@ -1,34 +1,12 @@
 import numpy as np
-from PIL import Image
-import os, sys
-from os.path import join, split, splitext, isdir, isfile, abspath
-import skimage
 
-__img_ext__ = ['jpg', 'jpeg', 'png', 'bmp']
+
+__img_exts__ = ['jpg', 'jpeg', 'png', 'bmp']
 
 
 def isimg(path):
     path = path.lower()
-    return any(path.endswith(ext) for ext in __img_ext__)
-
-
-def traverse_folder(path):
-    """
-    traverse a given folder to find image files
-    input:  path to traverse for images
-    return: a list containing all image paths
-    """
-    images = []
-    for p in os.listdir(path):
-        p1 = abspath(join(path, p))
-        if isdir(p1):
-            images += traverse_folder(p1)
-        elif isimg(p1):
-            images.append(p1)
-        else:
-            continue
-
-    return images
+    return any(path.endswith(ext) for ext in __img_exts__)
 
 
 def gray2rgb(x):

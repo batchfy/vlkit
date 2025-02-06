@@ -27,9 +27,9 @@ def str2color(s: str) -> tuple:
     return (r, g, b)
 
 
-def overlay(image, mask, alpha=0.3, palette=None, show_boundary=False, boundary_color=(255, 255, 255)):
+def overlay_mask(image, mask, alpha=0.3, palette=None, show_boundary=False, boundary_color=(255, 255, 255)):
     """
-    Overlay a mask on an image with optional boundary highlighting.
+    Overlay a categorical mask on an image with optional boundary highlighting.
 
     Parameters:
     image (numpy.ndarray): The input image. Can be grayscale or RGB.
@@ -72,3 +72,43 @@ def overlay(image, mask, alpha=0.3, palette=None, show_boundary=False, boundary_
             cv2.drawContours(overlay, contours, -1, boundary_color, 1)
     return normalize(overlay, 0, 255).astype(np.uint8)
 
+
+def overlay_heatmap(image, heatmap, alpha=0.5, colormap=cv2.COLORMAP_JET, threshold=0.0):
+    """
+    Overlay a heatmap on an image with threshold control.
+
+    Args:
+        image (numpy.ndarray): The original image (H, W, 3).
+        heatmap (numpy.ndarray): The heatmap with values in range [0,1] (H, W).
+        alpha (float): Transparency factor (0: only image, 1: only heatmap).
+        colormap (int): OpenCV colormap type.
+        threshold (float): Values below this threshold will not be overlaid (range [0,1]).
+
+    Returns:
+        numpy.ndarray: Image with heatmap overlay.
+    """
+    assert heatmap.ndim == 2, f"Bad heatmap shape: {heatmap.shape}."
+    assert heatmap.min() >= 0 and heatmap.max() <= 1, f"Bad heatmap range: [{heatmap.min()}, {heatmap.max()}]." 
+    
+    # Convert image to uint8 if needed
+    if image.dtype != np.uint8:
+        image = np.uint8(normalize(image, 0, 1) * 255)
+    
+    # Create mask for values above threshold
+    mask = heatmap >= threshold
+    
+    # Normalize heatmap to range 0-255
+    heatmap = np.uint8(255 * heatmap)
+    
+    # Apply color map
+    heatmap_colored = cv2.applyColorMap(heatmap, colormap)
+
+    print(heatmap_colored.max())
+    
+    # Initialize overlay with original image
+    overlay = image.copy()
+    
+    # Only blend where mask is True
+    overlay[mask] = cv2.addWeighted(heatmap_colored, alpha, image, 1 - alpha, 0)[mask]
+
+    return overlay
