@@ -1,6 +1,7 @@
 import hashlib, cv2
 import numpy as np
 from .image import normalize
+from .image.format import convert2hw3
 
 def iscolor(x):
     if isinstance(x, (list, tuple, np.ndarray)) and len(x) == 3:
@@ -90,6 +91,8 @@ def overlay_heatmap(image, heatmap, alpha=0.5, colormap=cv2.COLORMAP_JET, thresh
     assert heatmap.ndim == 2, f"Bad heatmap shape: {heatmap.shape}."
     assert heatmap.min() >= 0 and heatmap.max() <= 1, f"Bad heatmap range: [{heatmap.min()}, {heatmap.max()}]." 
     
+    image = convert2hw3(image)
+    
     # Convert image to uint8 if needed
     if image.dtype != np.uint8:
         image = np.uint8(normalize(image, 0, 1) * 255)
@@ -101,9 +104,7 @@ def overlay_heatmap(image, heatmap, alpha=0.5, colormap=cv2.COLORMAP_JET, thresh
     heatmap = np.uint8(255 * heatmap)
     
     # Apply color map
-    heatmap_colored = cv2.applyColorMap(heatmap, colormap)
-
-    print(heatmap_colored.max())
+    heatmap_colored = cv2.cvtColor(cv2.applyColorMap(heatmap, colormap), cv2.COLOR_BGR2RGB)
     
     # Initialize overlay with original image
     overlay = image.copy()

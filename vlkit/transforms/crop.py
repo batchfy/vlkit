@@ -42,7 +42,7 @@ def get_input_hw(x: ImgOrList, is_hw_first: bool = True):
         else:
             raise TypeError("Input list must contain NumPy arrays or PIL.Images.")
     else:
-        raise TypeError("Input must be a NumPy array, PyTorch tensor, an PIL.Image, or list of them.")
+        raise TypeError(f"Input must be a NumPy array, PyTorch tensor, an PIL.Image, or list of them, but got {type(x)}.")
     return input_h, input_w
 
 
