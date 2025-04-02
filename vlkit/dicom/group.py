@@ -1,5 +1,5 @@
 from glob import glob
-from ..common import dotdict
+from ..common import Dotdict
 
 try:
     import pydicom
@@ -17,7 +17,7 @@ def group_study(dicoms: list):
         raise ImportError("This function requires pydicom to be installed. Please install it using 'pip install pydicom'")
     assert isinstance(dicoms, list), "dicoms must be a list"
     assert all([hasattr(ds, "StudyInstanceUID") for ds in dicoms]), "All items in dicoms must have 'StudyInstanceUID' attribute"
-    study_dict = dotdict()
+    study_dict = Dotdict()
     if len(dicoms) == 0:
         return study_dict
 
@@ -39,7 +39,7 @@ def group_series(dicoms: list, remove_duplicates: bool = True):
     assert isinstance(dicoms, list), "dicoms must be a list"
     assert all([hasattr(ds, "SeriesInstanceUID") for ds in dicoms]), "All items in dicoms must have 'SeriesInstanceUID' attribute"
 
-    series_dict = dotdict()
+    series_dict = Dotdict()
     if len(dicoms) == 0:
         return series_dict
 
