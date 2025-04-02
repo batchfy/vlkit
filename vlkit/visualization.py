@@ -1,5 +1,10 @@
 import hashlib, cv2
 import numpy as np
+from io import BytesIO
+from PIL import Image
+from einops import rearrange
+
+from .array import torch
 from .image import normalize
 from .image.format import convert2hw3
 
@@ -7,6 +12,7 @@ def iscolor(x):
     if isinstance(x, (list, tuple, np.ndarray)) and len(x) == 3:
         return all(0 <= v <= 255 for v in x)
     return False
+
 
 def str2color(s: str) -> tuple:
     """
@@ -113,3 +119,23 @@ def overlay_heatmap(image, heatmap, alpha=0.5, colormap=cv2.COLORMAP_JET, thresh
     overlay[mask] = cv2.addWeighted(heatmap_colored, alpha, image, 1 - alpha, 0)[mask]
 
     return overlay
+
+
+def plot2array(fig, order="nchw", dpi=100):
+    """Convert a Matplotlib figure to a TensorBoard-compatible image (C, H, W)."""
+    if torch is None:
+        raise ImportError("torch is required for this function.")
+    assert order in ["nchw", "hwc"], f"Invalid order: {order}."
+
+    buf = BytesIO()
+    fig.savefig(buf, format='jpg', dpi=dpi)  # Save figure to buffer
+    buf.seek(0)
+
+    # Open image with PIL and convert to NumPy array
+    image = Image.open(buf)
+    image = np.array(image)  # Shape (H, W, 3) with RGB
+
+    if order == "nchw":
+        image = rearrange(image, "h w c -> 1 c h w")
+
+    return image

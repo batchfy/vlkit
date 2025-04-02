@@ -1,5 +1,5 @@
 import pydicom
-from ..common import dotdict
+from ..common import Dotdict
 from warnings import warn
 from typing import List, Dict
 from glob import glob
@@ -56,7 +56,7 @@ def group_dicoms_into_series(
     Returns:
         dict: A dictionary where the keys are SeriesInstanceUIDs and the values are lists of DICOM files belonging to that series.
     """
-    series = dotdict()
+    series = Dotdict()
     for ds in dicoms:
         if ds.SeriesInstanceUID not in series:
             series[ds.SeriesInstanceUID] = [ds]
@@ -84,7 +84,7 @@ def build_sop_instance_uid_lookup_table(dicoms: List[pydicom.dataset.FileDataset
     Returns:
     dict: A dictionary where the keys are SOPInstanceUIDs and the values are the corresponding DICOM objects.
     """
-    sop_instance_uid_lookup_table = dotdict()
+    sop_instance_uid_lookup_table = Dotdict()
     for ds in dicoms:
         sop_instance_uid_lookup_table[ds.SOPInstanceUID] = ds
     return sop_instance_uid_lookup_table

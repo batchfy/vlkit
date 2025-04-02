@@ -149,7 +149,7 @@ def center_crop(x: ImgOrList, target_size: tuple | int, is_hw_first:bool) -> Img
     input_h, input_w = get_input_hw(x, is_hw_first)
 
     # Handle target_size input
-    assert isinstance(target_size) or len(target_size) == 2, f"Invalid target_size: {target_size}."
+    assert isinstance(target_size, int) or len(target_size) == 2, f"Invalid target_size: {target_size}."
     if isinstance(target_size, int):
         target_h = target_w = target_size
     else:
