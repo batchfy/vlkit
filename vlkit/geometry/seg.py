@@ -1,4 +1,5 @@
-import cv2
+from ..array import cv2
+from PIL import Image, ImageDraw
 import numpy as np
 from skimage import morphology
 
@@ -26,6 +27,8 @@ def seg2edge(seg, thin=False):
 
 
 def sobel(x, kernel_size=3):
+    if cv2 is None:
+        raise ImportError("cv2 is required for this function")
     sobelx = cv2.Sobel(x, cv2.CV_64F, 1, 0, ksize=kernel_size)
     sobely = cv2.Sobel(x, cv2.CV_64F, 0, 1, ksize=kernel_size)
 
@@ -73,6 +76,8 @@ def dense2flux(density, kernel_size=9, normalize=True):
         flux: flux field of shape [2, H, W]
       
     """
+    if cv2 is None:
+        raise ImportError("cv2 is required for this function")
     sobelx = cv2.Sobel(density, cv2.CV_64F, 1, 0, ksize=kernel_size)
     sobely = cv2.Sobel(density, cv2.CV_64F, 0, 1, ksize=kernel_size)
 
@@ -106,3 +111,28 @@ def dequantize_angle(q, num_bins=8):
     assert q.min() >= 0 and q.max() < num_bins
     angle = q * (np.pi*2 / num_bins)
     return angle
+
+
+def polygon2mask(polygon:np.ndarray, h:int, w:int):
+    """
+    Converts a polygon into a binary mask.
+
+    Parameters:
+        polygon (numpy.ndarray): A 2D array of shape (N, 2) representing the vertices of the polygon.
+                                 Each row corresponds to a vertex with (x, y) coordinates.
+        h (int): The height of the output mask.
+        w (int): The width of the output mask.
+
+    Returns:
+        numpy.ndarray: A 2D boolean array of shape (h, w) where pixels inside the polygon are True, 
+                       and pixels outside are False.
+
+    Raises:
+        AssertionError: If `polygon` is not a 2D array or does not have exactly 2 columns.
+    """
+    assert polygon.ndim == 2
+    assert polygon.shape[1] == 2
+    mask1 = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(mask1)
+    draw.polygon(polygon, fill=1)
+    return np.array(mask1, dtype=bool)

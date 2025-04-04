@@ -1,7 +1,7 @@
 """`Non-Photorealistic Rendering <https://docs.opencv.org/4.5.2/df/dac/group__photo__render.html>`_
 
 """
-import cv2
+from ..array import cv2
 import torch, random
 from PIL import Image
 import numpy as np

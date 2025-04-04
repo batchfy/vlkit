@@ -8,6 +8,11 @@ try:
 except Exception as e:
     numpy = np = None
 
+try:
+    import cv2
+except Exception as e:
+    cv2 = None
+
 from PIL import Image
 
 if np == None and torch == None:

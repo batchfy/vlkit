@@ -21,32 +21,6 @@ def gray2rgb(x):
         raise ValueError("Unsupported shape: %s" % str(x.shape))
 
 
-def norm01(x):
-    """
-    Normalize input image into range [0, 1]
-    """
-    assert isinstance(x, np.ndarray)
-    x = x.astype(np.float32)
-    if x.max() == x.min():
-        return x - x.min()
-    x -= x.min()
-    x /= x.max()
-    return x
-
-
-def norm255(x):
-    """
-    Normalize input image into range [0, 1]
-    """
-    assert isinstance(x, np.ndarray)
-    x = x.astype(np.float32)
-    if x.max() == x.min():
-        x[...] = 0
-        return x
-    x = norm01(x)
-    return (x * 255).astype(np.uint8)
-
-
 def hwc2nchw(image):
     """
     Convert an image (or a list of images of the same size) to

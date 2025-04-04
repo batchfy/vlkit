@@ -1,19 +1,20 @@
-import os
 from setuptools import setup, find_packages
-from setuptools import Extension
-from distutils.command.build import build as build_orig
-
-from setuptools import dist
 
 __version__ = "0.1.0b11"
 
-setup(name='vlkit',
+setup(
+    name='vlkit',
     version=__version__,
-    description='vision and learning kit',
-    url='https://github.com/vlkit/vlkit',
-    author_email='kz@kaizhao.net',
+    description='Vision and Learning Toolkit',
+    url='https://github.com/batchfy/vlkit',
+    author_email='batchfy@gmail.com',
+    author='https://batchfy.com',
     license='MIT',
     packages=find_packages(),
-    install_requires=["numpy", 'scikit-image'],
     zip_safe=False,
+    install_requires=[
+        "numpy>=2.2.4",
+        "pillow>=11.1.0",
+        "scikit-image>=0.25.2",
+    ],
 )

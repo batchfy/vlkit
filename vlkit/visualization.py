@@ -1,12 +1,13 @@
-import hashlib, cv2
+import hashlib
 import numpy as np
 from io import BytesIO
 from PIL import Image
 from einops import rearrange
 
-from .array import torch
+from .array import torch, cv2
 from .image import normalize
 from .image.format import convert2hw3
+
 
 def iscolor(x):
     if isinstance(x, (list, tuple, np.ndarray)) and len(x) == 3:
@@ -48,6 +49,10 @@ def overlay_mask(image, mask, alpha=0.3, palette=None, show_boundary=False, boun
     Returns:
     numpy.ndarray: The image with the mask overlay applied.
     """
+    if cv2 is None:
+        raise ImportError(
+            "cv2 is required for this function. Install via pip 'install opencv-python'."
+        )
     h, w = image.shape[:2]
     assert mask.shape == (h, w), f"Bad mask shape: {mask.shape}."
 
@@ -94,6 +99,10 @@ def overlay_heatmap(image, heatmap, alpha=0.5, colormap=cv2.COLORMAP_JET, thresh
     Returns:
         numpy.ndarray: Image with heatmap overlay.
     """
+    if cv2 is None:
+        raise ImportError(
+            "cv2 is required for this function. Install via pip 'install opencv-python'."
+        )
     assert heatmap.ndim == 2, f"Bad heatmap shape: {heatmap.shape}."
     assert heatmap.min() >= 0 and heatmap.max() <= 1, f"Bad heatmap range: [{heatmap.min()}, {heatmap.max()}]." 
     
