@@ -35,6 +35,15 @@ def get_pixel_to_patient_transformation_matrix(series_data):
     """
     https://nipy.org/nibabel/dicom/dicom_orientation.html
     """
+    required_keys = [
+        "ImagePositionPatient",
+        "ImageOrientationPatient",
+        "PixelSpacing"
+    ]
+    for s in series_data:
+        for k in required_keys:
+            if not hasattr(s, k) or s[k] is None:
+                raise ValueError(f"Missing required attribute {k} in series slice")
 
     first_slice = series_data[0]
 
