@@ -1,6 +1,5 @@
 from typing import Any
 import numpy as np
-from PIL import Image
 import os.path as osp
 
 from ..array import torch

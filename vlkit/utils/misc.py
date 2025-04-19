@@ -34,11 +34,27 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-    def __init__(self, name='value', fmt=':f'):
-        self.name = name
-        self.fmt = fmt
+class AverageMeter:
+    """
+    A class to compute and store the average and current value of a metric.
+
+    Attributes:
+        val (float): The most recent value added.
+        avg (float): The running average of all values added.
+        sum (float): The cumulative sum of all values added.
+        count (int): The total number of values added.
+
+    Methods:
+        reset():
+            Resets all attributes (val, avg, sum, count) to zero.
+        update(val, n=1):
+            Updates the meter with a new value.
+            Args:
+                val (float): The new value to add.
+                n (int, optional): The weight or count of the new value. Defaults to 1.
+    """
+    """Computes and stores the average and current value."""
+    def __init__(self):
         self.reset()
 
     def reset(self):
@@ -52,10 +68,6 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
-
-    def __str__(self):
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
-        return fmtstr.format(**self.__dict__)
 
 
 def get_logger(path="log.txt"):
