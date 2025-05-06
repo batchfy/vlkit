@@ -54,7 +54,7 @@ def bwdist(mask):
     n, c, h, w = mask.shape
     assert c == 1
     distance = np.full(mask.shape, np.inf, dtype=np.float32)
-    indices = np.full((n, 2, h, w), np.inf, dtype=np.int32)
+    indices = np.full((n, 2, h, w), -1, dtype=np.int32)
     offset = np.full(indices.shape, np.inf, dtype=np.float32)
     yxs = np.stack(np.meshgrid(np.arange(h), np.arange(w), indexing="ij"), axis=0)
     for i in range(n):

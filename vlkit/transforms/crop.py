@@ -144,7 +144,7 @@ def crop_long_edge(
     return cropped
 
 
-def center_crop(x: ImgOrList, target_size: tuple | int, is_hw_first:bool) -> ImgOrList:
+def center_crop(x: ImgOrList, target_size: tuple | int, is_hw_first:bool=False) -> ImgOrList:
     # Get input image dimensions
     input_h, input_w = get_input_hw(x, is_hw_first)
 
