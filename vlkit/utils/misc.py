@@ -3,13 +3,30 @@ from os.path import join, isdir
 from ..array import torch, np
 
 
-def str2bool(input: str):
-    if input.lower in ['yes', 'good', 'right', 'y']:
+def str2bool(input_str: str) -> bool:
+    """
+    Convert a string to a boolean value.
+    
+    Useful for parsing command line arguments where boolean values are passed as strings.
+    
+    Args:
+        input_str (str): The string to convert to boolean.
+        
+    Returns:
+        bool: True for positive values ('yes', 'true', 'y', '1', etc.), 
+              False for negative values ('no', 'false', 'n', '0', etc.)
+    
+    Raises:
+        ValueError: If the string cannot be converted to a boolean.
+    """
+    if isinstance(input_str, bool):
+        return input_str
+    if input_str.lower() in ('yes', 'true', 'y', 't', '1', 'on', 'enable', 'enabled'):
         return True
-    elif input.lower() in ['no', 'bad', 'wrong', 'n']:
+    elif input_str.lower() in ('no', 'false', 'n', 'f', '0', 'off', 'disable', 'disabled'):
         return False
     else:
-        raise RuntimeError(f"Cannot convert {input} to boolean.")
+        raise ValueError(f"Cannot convert '{input_str}' to boolean.")
 
 
 def accuracy(output, target, topk=(1,)):

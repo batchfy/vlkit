@@ -1,20 +1,25 @@
+from collections.abc import Iterable
 import matplotlib
 import numpy as np
 
 
 def clear_xticks(axes):
-    if isinstance(axes, np.ndarray):
-        for ax in axes.flatten():
+    if isinstance(axes, Iterable):
+        if isinstance(axes, np.ndarray):
+            axes = axes.flatten()
+        for ax in axes:
             ax.set_xticks([])
     elif isinstance(axes, matplotlib.axes._axes.Axes):
         axes.set_xticks([])
     else:
-        raise TypeError(type(axes))
+        raise ValueError
 
 
 def clear_yticks(axes):
-    if isinstance(axes, np.ndarray):
-        for ax in axes.flatten():
+    if isinstance(axes, Iterable):
+        if isinstance(axes, np.ndarray):
+            axes = axes.flatten()
+        for ax in axes:
             ax.set_yticks([])
     elif isinstance(axes, matplotlib.axes._axes.Axes):
         axes.set_yticks([])
