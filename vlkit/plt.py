@@ -1,6 +1,14 @@
 from collections.abc import Iterable
-import matplotlib
+import matplotlib, shutil
 import numpy as np
+
+
+def setup_tex_fonts:
+    if shutil.which("pdflatex") is not None:
+        plt.rcParams.update({
+            "text.usetex": True,
+            "font.family": "Computer Modern",
+        })
 
 
 def clear_xticks(axes):
