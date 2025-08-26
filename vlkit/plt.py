@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 import matplotlib, shutil
+import matplotlib.pyplot as plt
 import numpy as np
 
 
